@@ -73,6 +73,7 @@ export default function Register() {
         <label>
           <Text size="sm">Nome de usuário</Text>
           <TextInput
+            crossOrigin={undefined}
             prefix="ignite.com/"
             placeholder="seu-usuario"
             {...register('username')}
@@ -85,7 +86,11 @@ export default function Register() {
 
         <label>
           <Text size="sm">Nome completo</Text>
-          <TextInput placeholder="seu-usuario" {...register('name')} />
+          <TextInput
+            crossOrigin={undefined}
+            placeholder="seu-usuario"
+            {...register('name')}
+          />
 
           {errors.name && (
             <FormError size="sm">{errors.name.message}</FormError>
