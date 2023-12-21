@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Calendar } from '../../../../../components/Calendar'
 import {
   Container,
@@ -10,15 +10,15 @@ import {
 import dayjs from 'dayjs'
 import { api } from '@/src/lib/axios'
 import { useRouter } from 'next/router'
+import { useQuery } from '@tanstack/react-query'
 
 interface Availability {
   possibleTimes: number[]
-  availableTimes: number[]
+  availabilityTimes: number[]
 }
 
 export function CalendarStep() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [availability, setAvailability] = useState<Availability | null>(null)
 
   const router = useRouter()
 
@@ -30,21 +30,19 @@ export function CalendarStep() {
     ? dayjs(selectedDate).format('DD[ de ]MMMM')
     : null
 
-  useEffect(() => {
-    if (!selectedDate) {
-      return
-    }
+  const selectedDateWithoutTime = selectedDate
+    ? dayjs(selectedDate).format('YYYY-MM-DD')
+    : null
 
-    api
-      .get(`/users/${username}/availability`, {
-        params: {
-          date: dayjs(selectedDate).format('YYYY-MM-DD'),
-        },
-      })
-      .then((response) => {
-        setAvailability(response.data)
-      })
-  }, [selectedDate, username])
+  const { data: availability } = useQuery<Availability>({
+    queryKey: ['availability', selectedDateWithoutTime],
+    queryFn: async () => {
+      const { data } = await api.get(
+        `/users/${username}/availability?date=${selectedDateWithoutTime}`,
+      )
+      return data
+    },
+  })
 
   return (
     <Container isTimePickerOpen={isDateSelected}>
@@ -61,13 +59,12 @@ export function CalendarStep() {
               return (
                 <TimePickerItem
                   key={hour}
-                  disabled={!availability.availableTimes.includes(hour)}
+                  disabled={!availability.availabilityTimes.includes(hour)}
                 >
                   {String(hour).padStart(2, '0')}:00h
                 </TimePickerItem>
               )
             })}
-            <TimePickerItem>08:00h</TimePickerItem>
           </TimePickerList>
         </TimePicker>
       )}
